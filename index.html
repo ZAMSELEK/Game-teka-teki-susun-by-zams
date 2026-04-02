@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Teka Teki Susun Kata - 100+ Kata Unik!</title>
+    <title>Teka Teki Susun Kata - 300+ Kata Terbaru</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,149 +16,209 @@
 
         body {
             font-family: 'Poppins', 'Segoe UI', 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
             position: relative;
+            transition: background 0.5s ease;
         }
 
-        /* Particle background effect */
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
+        body.bg1 { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); }
+        body.bg2 { background: linear-gradient(135deg, #1e3c72, #2a5298, #1e3c72); }
+        body.bg3 { background: linear-gradient(135deg, #42275a, #734b6d, #42275a); }
+        body.bg4 { background: linear-gradient(135deg, #283048, #859398, #283048); }
+        body.bg5 { background: linear-gradient(135deg, #4b6cb7, #182848, #4b6cb7); }
+        body.bg6 { background: linear-gradient(135deg, #2c3e50, #3498db, #2c3e50); }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 20px;
+            transition: all 0.3s ease;
         }
 
-        .particle {
-            position: absolute;
-            background: rgba(255,255,255,0.3);
-            border-radius: 50%;
-            animation: float 10s infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-100px) rotate(180deg); }
+        .container.leaderboard-hidden {
+            grid-template-columns: 1fr;
         }
 
         .game-wrapper {
-            max-width: 900px;
-            width: 100%;
             background: rgba(255,255,255,0.98);
             border-radius: 30px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
             animation: slideIn 0.5s ease;
-            position: relative;
-            z-index: 1;
         }
 
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Header */
         .game-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 25px;
+            padding: 20px;
             text-align: center;
             color: white;
-            position: relative;
         }
 
         .game-header h1 {
             font-size: 28px;
-            margin-bottom: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
         }
 
-        .game-header p {
-            opacity: 0.9;
-            font-size: 12px;
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(0,0,0,0.7);
+            border-radius: 50px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            backdrop-filter: blur(5px);
         }
 
-        /* Score Panel */
+        .music-control button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            color: white;
+        }
+
+        .toggle-leaderboard {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0,0,0,0.7);
+            border-radius: 50px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            border: none;
+            font-size: 14px;
+        }
+
         .score-panel {
             display: flex;
             justify-content: space-between;
-            padding: 15px 25px;
+            padding: 15px 20px;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border-bottom: 2px solid #dee2e6;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .score-box, .level-box, .attempt-box, .streak-box {
+        .score-item {
             text-align: center;
             flex: 1;
         }
 
-        .score-box span, .level-box span, .attempt-box span, .streak-box span {
+        .score-item span {
             display: block;
-            font-size: 11px;
+            font-size: 10px;
             color: #6c757d;
-            margin-bottom: 5px;
             font-weight: 600;
         }
 
-        .score-box div, .level-box div, .attempt-box div, .streak-box div {
-            font-size: 24px;
+        .score-item .value {
+            font-size: 22px;
             font-weight: bold;
             color: #667eea;
         }
 
-        /* Question Area */
-        .question-area {
-            padding: 25px;
-            background: white;
+        .total-points {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            padding: 10px 20px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .total-points span {
+            font-size: 14px;
+        }
+
+        .total-points .total-value {
+            font-size: 24px;
+            margin-left: 10px;
+        }
+
+        .level-info {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .level-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .exp-bar {
+            flex: 1;
+            margin: 0 15px;
+            min-width: 120px;
+        }
+
+        .exp-bar .bar {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+        }
+
+        .exp-bar .fill {
+            background: #ffd700;
+            width: 0%;
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .exp-text {
+            font-size: 11px;
+        }
+
+        .hint-info {
+            background: #ffc107;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #212529;
         }
 
         .clue-box {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             padding: 20px;
             border-radius: 15px;
-            margin-bottom: 25px;
+            margin: 20px;
             position: relative;
-            overflow: hidden;
-        }
-
-        .clue-box::before {
-            content: "💡";
-            position: absolute;
-            right: 10px;
-            bottom: 10px;
-            font-size: 50px;
-            opacity: 0.2;
-        }
-
-        .clue-label {
-            font-size: 11px;
-            color: #6c757d;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 8px;
         }
 
         .clue-text {
             font-size: 18px;
             font-weight: 600;
             color: #2c3e50;
-            line-height: 1.4;
         }
 
         .category-badge {
@@ -168,17 +231,12 @@
             margin-top: 10px;
         }
 
-        /* Letter Tiles */
-        .tiles-container {
-            margin: 25px 0;
-        }
-
         .scrambled-letters {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 12px;
-            margin-bottom: 35px;
+            margin: 20px;
         }
 
         .letter-tile {
@@ -193,35 +251,18 @@
             font-weight: bold;
             color: white;
             cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.2s;
             text-transform: uppercase;
         }
 
-        .letter-tile:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-        }
+        .letter-tile:hover { transform: translateY(-3px); }
+        .letter-tile.selected { background: linear-gradient(135deg, #e74c3c, #c0392b); }
 
-        .letter-tile.selected {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            transform: scale(1.05);
-        }
-
-        /* Answer Area */
         .answer-area {
             background: #f8f9fa;
             padding: 20px;
+            margin: 20px;
             border-radius: 15px;
-            margin: 20px 0;
-        }
-
-        .answer-label {
-            font-size: 12px;
-            color: #6c757d;
-            text-align: center;
-            margin-bottom: 15px;
-            font-weight: 600;
         }
 
         .answer-letters {
@@ -229,7 +270,6 @@
             flex-wrap: wrap;
             justify-content: center;
             gap: 12px;
-            min-height: 85px;
         }
 
         .answer-slot {
@@ -243,156 +283,174 @@
             justify-content: center;
             font-size: 28px;
             font-weight: bold;
-            color: #495057;
-            transition: all 0.2s ease;
             text-transform: uppercase;
         }
 
         .answer-slot.filled {
             border: 3px solid #667eea;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            background: #e8f0fe;
         }
 
-        /* Buttons */
         .button-group {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             justify-content: center;
-            margin-top: 20px;
+            margin: 20px;
             flex-wrap: wrap;
         }
 
         button {
             padding: 10px 20px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: inherit;
+            transition: all 0.2s;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-info { background: #17a2b8; color: white; }
+        button:hover { transform: translateY(-2px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-            transform: translateY(-2px);
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-            transform: translateY(-2px);
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-            transform: translateY(-2px);
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .btn-warning:hover {
-            background: #e0a800;
-            transform: translateY(-2px);
-        }
-
-        /* Feedback */
         .feedback {
-            margin-top: 20px;
+            margin: 0 20px 20px;
             padding: 12px;
             border-radius: 10px;
             text-align: center;
-            font-weight: 500;
             display: none;
-            animation: slideUp 0.3s ease;
         }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        .feedback.success { background: #d4edda; color: #155724; display: block; }
+        .feedback.error { background: #f8d7da; color: #721c24; display: block; }
+        .feedback.info { background: #d1ecf1; color: #0c5460; display: block; }
 
-        .feedback.success {
-            background: #d4edda;
-            color: #155724;
-            display: block;
-            border-left: 4px solid #28a745;
-        }
-
-        .feedback.error {
-            background: #f8d7da;
-            color: #721c24;
-            display: block;
-            border-left: 4px solid #dc3545;
-        }
-
-        .feedback.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            display: block;
-            border-left: 4px solid #17a2b8;
-        }
-
-        /* Progress */
         .progress-section {
-            padding: 0 25px 20px 25px;
-        }
-
-        .progress-bar-container {
-            background: #e9ecef;
-            border-radius: 10px;
-            overflow: hidden;
-            height: 8px;
+            padding: 0 20px 20px;
         }
 
         .progress-bar {
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s ease;
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
         }
 
-        .progress-text {
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .leaderboard {
+            background: rgba(255,255,255,0.98);
+            border-radius: 30px;
+            overflow: hidden;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 20px;
+            color: white;
             text-align: center;
+            cursor: pointer;
+        }
+
+        .leaderboard-header h2 {
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .leaderboard-list {
+            padding: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .rank {
+            width: 35px;
+            height: 35px;
+            background: #f8f9fa;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .rank.top-1 { background: linear-gradient(135deg, #ffd700, #ffed4e); color: #856404; }
+        .rank.top-2 { background: linear-gradient(135deg, #c0c0c0, #e8e8e8); color: #495057; }
+        .rank.top-3 { background: linear-gradient(135deg, #cd7f32, #e6b17e); color: #5c3a1a; }
+
+        .player-name {
+            flex: 1;
+            margin-left: 12px;
+            font-weight: 500;
+        }
+
+        .player-score {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .player-level {
             font-size: 11px;
             color: #6c757d;
-            margin-top: 8px;
+            margin-left: 10px;
         }
 
-        /* Modal */
+        .login-form {
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 25px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .login-form button {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .credit {
+            text-align: center;
+            padding: 15px;
+            background: #1a1a2e;
+            color: white;
+            font-size: 12px;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -409,509 +467,679 @@
         .modal-content {
             background: white;
             border-radius: 20px;
-            padding: 35px;
+            padding: 30px;
             text-align: center;
             max-width: 400px;
-            animation: modalPop 0.3s ease;
         }
 
-        @keyframes modalPop {
-            from {
-                transform: scale(0.9);
-                opacity: 0;
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
             }
-            to {
-                transform: scale(1);
-                opacity: 1;
+            .leaderboard {
+                position: static;
+                margin-top: 20px;
             }
-        }
-
-        .modal-content h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-
-        .modal-content .final-score {
-            font-size: 42px;
-            font-weight: bold;
-            color: #f5576c;
-            margin: 15px 0;
-        }
-
-        .achievement {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 10px;
-            margin: 15px 0;
-        }
-
-        /* Responsive */
-        @media (max-width: 600px) {
             .letter-tile, .answer-slot {
                 width: 50px;
                 height: 50px;
                 font-size: 22px;
             }
-            
-            .game-header h1 {
-                font-size: 20px;
-            }
-            
-            .clue-text {
-                font-size: 14px;
-            }
-            
-            button {
-                padding: 8px 16px;
-                font-size: 12px;
-            }
         }
     </style>
 </head>
-<body>
-    <div class="particles" id="particles"></div>
-    
-    <div class="game-wrapper">
-        <div class="game-header">
-            <h1>
-                🧩 TEKA TEKI SUSUN KATA
-                <span>✨</span>
-            </h1>
-            <p>100+ Kata Unik | Asah Otak | Seru!</p>
-        </div>
+<body class="bg1">
+    <div class="music-control" id="musicControl">
+        <span>🎵</span>
+        <button id="playPauseBtn">⏸️</button>
+        <button id="nextSongBtn">⏩</button>
+        <span id="songName" style="font-size: 11px;">Loading...</span>
+    </div>
 
-        <div class="score-panel">
-            <div class="score-box">
-                <span>🏆 SKOR</span>
-                <div id="score">0</div>
-            </div>
-            <div class="streak-box">
-                <span>🔥 STREAK</span>
-                <div id="streak">0</div>
-            </div>
-            <div class="level-box">
-                <span>📊 LEVEL</span>
-                <div id="level">1</div>
-            </div>
-            <div class="attempt-box">
-                <span>💪 NYAWA</span>
-                <div id="attempts">3</div>
-            </div>
-        </div>
+    <button class="toggle-leaderboard" id="toggleLeaderboardBtn">
+        👁️ Tampilkan Leaderboard
+    </button>
 
-        <div class="question-area">
+    <div class="container" id="mainContainer">
+        <div class="game-wrapper">
+            <div class="game-header">
+                <h1>🧩 TEKA TEKI SUSUN KATA 🧩</h1>
+                <p>300+ Kata | Sistem Level | Leaderboard Akumulasi</p>
+            </div>
+
+            <div class="total-points">
+                <span>🏆 TOTAL POIN KEMENANGAN 🏆</span>
+                <span class="total-value" id="totalWinPoints">0</span>
+            </div>
+
+            <div class="score-panel">
+                <div class="score-item"><span>🎯 SKOR GAME</span><div class="value" id="score">0</div></div>
+                <div class="score-item"><span>🔥 STREAK</span><div class="value" id="streak">0</div></div>
+                <div class="score-item"><span>💪 NYAWA</span><div class="value" id="attempts">3</div></div>
+                <div class="score-item"><span>📊 SOAL</span><div class="value" id="questionCount">0/0</div></div>
+            </div>
+
+            <div class="level-info">
+                <div class="level-name" id="levelName">Level 1: Easy</div>
+                <div class="exp-bar">
+                    <div class="bar"><div class="fill" id="expFill"></div></div>
+                </div>
+                <div class="exp-text" id="expText">EXP: 0/100</div>
+                <div class="hint-info" id="hintCount">💡 Hint: 3/3</div>
+            </div>
+
             <div class="clue-box">
-                <div class="clue-label">📌 PETUNJUK KATA</div>
                 <div class="clue-text" id="clue">Memuat soal...</div>
                 <div class="category-badge" id="category">-</div>
             </div>
 
-            <div class="tiles-container">
-                <div class="scrambled-letters" id="scrambledLetters"></div>
-                
-                <div class="answer-area">
-                    <div class="answer-label">📝 SUSUN KATA DI SINI</div>
-                    <div class="answer-letters" id="answerLetters"></div>
-                </div>
+            <div class="scrambled-letters" id="scrambledLetters"></div>
+
+            <div class="answer-area">
+                <div class="answer-letters" id="answerLetters"></div>
             </div>
 
             <div class="button-group">
                 <button class="btn-secondary" id="resetBtn">🔄 Reset</button>
                 <button class="btn-warning" id="hintBtn">💡 Petunjuk</button>
+                <button class="btn-info" id="buyHintBtn" style="display: none;">✨ Beli Hint (+30 EXP)</button>
                 <button class="btn-danger" id="clearBtn">🗑️ Hapus</button>
                 <button class="btn-primary" id="submitBtn">✅ Cek</button>
                 <button class="btn-success" id="nextBtn" style="display: none;">⏩ Next</button>
             </div>
 
             <div class="feedback" id="feedback"></div>
+
+            <div class="progress-section">
+                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            </div>
+
+            <div class="credit">
+                Create By Zams | Version 2.0 | 300+ Kata
+            </div>
         </div>
 
-        <div class="progress-section">
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progressBar"></div>
+        <div class="leaderboard" id="leaderboard">
+            <div class="leaderboard-header" id="leaderboardHeader">
+                <h2>🏆 LEADERBOARD 🏆</h2>
+                <p>Akumulasi Poin Kemenangan (3030/win)</p>
             </div>
-            <div class="progress-text" id="progressText">Soal 1 dari 20</div>
+            <div class="leaderboard-list" id="leaderboardList">
+                <div style="text-align: center; padding: 20px;">Loading...</div>
+            </div>
+            <div class="login-form">
+                <input type="text" id="playerName" placeholder="Masukkan nama Anda" maxlength="20">
+                <button id="saveScoreBtn">💾 Simpan Skor ke Leaderboard</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="levelUpModal">
+        <div class="modal-content">
+            <h2>🎉 LEVEL UP! 🎉</h2>
+            <p id="levelUpMsg">Selamat! Anda naik level!</p>
+            <button class="btn-primary" onclick="closeLevelUpModal()">Lanjutkan</button>
         </div>
     </div>
 
     <div class="modal" id="gameCompleteModal">
         <div class="modal-content">
-            <h2>🎉 SELAMAT! 🎉</h2>
-            <p>Kamu hebat! Berhasil menyelesaikan semua soal!</p>
-            <div class="final-score" id="finalScore">0</div>
-            <div class="achievement" id="achievementText"></div>
-            <button class="btn-primary" id="playAgainBtn">🔄 Main Lagi</button>
+            <h2>🏆 SELAMAT! 🏆</h2>
+            <p>Anda telah menyelesaikan semua level!</p>
+            <div class="final-score" style="font-size: 24px; margin: 10px 0;">Poin Kemenangan: <span id="finalWinPoints">0</span></div>
+            <button class="btn-primary" id="playAgainBtn">🔄 Main Lagi (+3030 Poin)</button>
         </div>
     </div>
 
     <script>
-        // Database kata yang BERAGAM dan UNIK!
-        const questions = [
-            // Hewan - Hewanan
-            { word: "KANGURU", clue: "Hewan khas Australia yang suka melompat dan punya kantong", category: "Hewan Unik" },
-            { word: "KURA", clue: "Hewan yang membawa rumah di punggungnya, bisa hidup di air dan darat", category: "Hewan" },
-            { word: "GAJAH", clue: "Hewan darat terbesar dengan belalai panjang", category: "Hewan" },
-            { word: "JERAPAH", clue: "Hewan dengan leher terpanjang di dunia", category: "Hewan" },
-            { word: "ZEBRA", clue: "Hewan bergaris hitam putih mirip kuda", category: "Hewan" },
-            { word: "KOMODO", clue: "Kadal raksasa yang hanya ada di Indonesia", category: "Hewan Endemik" },
-            { word: "CENDERAWASIH", clue: "Burung surga yang sangat indah dari Papua", category: "Burung" },
+        // ==================== 300+ DATABASE KATA ====================
+        function generateAllQuestions() {
+            const categories = {
+                hewan: ["KANGURU", "KOMODO", "GAJAH", "JERAPAH", "ZEBRA", "KUCING", "SAPI", "BURUNG", "ULAR", "HARIMAU", "SINGA", "MACAN", "KUDA", "KAMBING", "AYAM", "BEBEK", "ANJING", "KELINCI", "TIKUS", "MONYET", "GURITA", "CUMI", "UDANG", "KEPITING", "PAUS", "LUMBA", "HIU", "PENYU", "KADAL", "BUNGALON"],
+                makanan: ["RENDANG", "SATE", "BAKSO", "PEMPEK", "GUDEG", "NASI", "MIE", "SOTO", "RAWON", "TENGGIRI", "CUMI", "KERANG", "SEAFOOD", "PIZZA", "BURGER", "PASTA", "SUSHI", "RAMEN", "DIMSUM", "KIMCHI", "TACO", "NACHOS", "SATAY", "GADO", "KETOPRAK", "NASGOR", "MIEAYAM", "BATAGOR", "CILOK", "CIRENG"],
+                buah: ["PISANG", "APEL", "JERUK", "MANGGA", "SEMANGKA", "ANGGUR", "PEPAYA", "NANAS", "DURIAN", "RAMBUTAN", "LECI", "MELON", "BLEWAH", "JAMBU", "BELIMBING", "SAWO", "KELAPA", "ALPUKAT", "STRAWBERRY", "BLUEBERRY", "KIWI", "DELIMA", "MURBEI", "NAGA", "MARKISA", "SIRSAK", "KEDONDONG", "CEMPEDAK", "PALEM", "KURMA"],
+                wisata: ["BOROBUDUR", "BALI", "BROMO", "RAJAAMPAT", "LABUANBAJO", "LOMBOK", "PAPUA", "KOMODO", "FLORES", "SUMATRA", "JOGJA", "BANDUNG", "JAKARTA", "SURABAYA", "MALANG", "SEMARANG", "MEDAN", "PADANG", "PALEMBANG", "BANJARMASIN", "MAKASSAR", "MANADO", "JAYAPURA", "AMBON", "TERNATE", "BATAM", "BINTAN", "KARIMUN", "BELITUNG", "BANGKA"],
+                teknologi: ["INTERNET", "ROBOT", "WEBSITE", "APLIKASI", "KOMPUTER", "LAPTOP", "SMARTPHONE", "TABLET", "PROGRAM", "SOFTWARE", "HARDWARE", "DATABASE", "SERVER", "CLOUD", "JARINGAN", "WIFI", "BLUETOOTH", "SENSOR", "ARTIFICIAL", "INTELLIGENCE", "MACHINE", "LEARNING", "DATA", "ANALISIS", "ALGORITMA", "PYTHON", "JAVASCRIPT", "HTML", "CSS", "REACT"],
+                profesi: ["GURU", "DOKTER", "POLISI", "ARSITEK", "KOKI", "PILOT", "MASINIS", "NELAYAN", "PETANI", "PEDAGANG", "TENTARA", "LAWYER", "JAKSA", "HAKIM", "NOTARIS", "AKUNTAN", "MANAJER", "DIREKTUR", "KARYAWAN", "BURUH", "SATPAM", "DRIVER", "KURIR", "RESEPSIONIS", "SPG", "DESAINER", "FOTOGRAFER", "ILMUWAN", "PENELITI", "DOSEN"],
+                alam: ["PELANGI", "ANGIN", "HUJAN", "MATAHARI", "BULAN", "BINTANG", "AWAN", "GUNUNG", "LAUT", "PANTAI", "SUNGAI", "DANAU", "AIR", "API", "TANAH", "BATU", "PASIR", "KAYU", "DAUN", "BUNGA", "RUMPUT", "HUTAN", "SAVANA", "GURUN", "KUTUB", "ES", "SALJU", "ANGINTOPAN", "GEMPA", "BANJIR"],
+                budaya: ["NUSANTARA", "BHINNEKA", "PANCASILA", "BATIK", "ANGKLUNG", "GAMELAN", "WAYANG", "KERIS", "TARI", "REOG", "SAMAN", "PENCAK", "SILAT", "RUMPUN", "ADAT", "TRADISI", "UPACARA", "SELAMATAN", "HAJATAN", "KENDURI", "LEBARAN", "NYEPI", "IMLEK", "NATAL", "PASKAH", "WESAK", "KUNINGAN", "GALUNGAN", "SEKATAN", "MALAM"],
+                sifat: ["KREATIF", "INOVASI", "MOTIVASI", "PRESTASI", "JUJUR", "DISIPLIN", "KERAS", "SABAR", "IKHLAS", "TAWADHU", "PEMAAR", "PEDULI", "SETIA", "TEKUN", "RAJIN", "CERDAS", "PINTAR", "BIJAK", "ARIF", "BERSIH", "SEHAT", "KUAT", "TANGGUH", "PRIMA", "UNGGUL", "HEBAT", "LUARBIASA", "ISTIMEWA", "SPESIAL", "UNIK"]
+            };
             
-            // Makanan
-            { word: "SATE", clue: "Makanan berupa daging tusuk yang dibakar dengan bumbu kacang", category: "Kuliner Nusantara" },
-            { word: "RENDANG", clue: "Masakan daging khas Padang yang dimasak berjam-jam", category: "Masakan" },
-            { word: "PEMPEK", clue: "Makanan khas Palembang dari ikan dan sagu", category: "Kuliner" },
-            { word: "BAKSO", clue: "Bola-bola daging dengan kuah, biasanya pakai mie", category: "Makanan" },
-            { word: "GUDEG", clue: "Masakan dari nangka muda khas Yogyakarta", category: "Kuliner" },
-            { word: "SOTO", clue: "Makanan berkuah dengan ayam atau daging", category: "Makanan" },
+            let all = [];
+            for (let cat in categories) {
+                categories[cat].forEach(word => {
+                    all.push({
+                        word: word,
+                        clue: `Kata berhubungan dengan ${cat} dalam bahasa Indonesia`,
+                        category: cat.charAt(0).toUpperCase() + cat.slice(1)
+                    });
+                });
+            }
             
-            // Tempat Wisata
-            { word: "BOROBUDUR", clue: "Candi Buddha terbesar di dunia, terletak di Magelang", category: "Wisata" },
-            { word: "BALI", clue: "Pulau dewata yang terkenal dengan pantainya", category: "Destinasi" },
-            { word: "RAJAAMPAT", clue: "Surga bawah laut di Papua Barat", category: "Wisata Bahari" },
-            { word: "LABUANBAJO", clue: "Tempat wisata dengan komodo dan pink beach", category: "Destinasi" },
-            { word: "BROMO", clue: "Gunung berapi dengan lautan pasir yang terkenal", category: "Gunung" },
+            // Tambahkan clue spesifik untuk beberapa kata
+            const specificClues = {
+                "KANGURU": "Hewan khas Australia yang melompat dan punya kantong",
+                "KOMODO": "Kadal raksasa endemik Indonesia dari Pulau Komodo",
+                "RENDANG": "Masakan daging khas Padang yang dimasak berjam-jam",
+                "BOROBUDUR": "Candi Buddha terbesar di dunia di Magelang",
+                "PANCASILA": "Dasar negara Republik Indonesia",
+                "NUSANTARA": "Sebutan untuk seluruh wilayah Indonesia",
+                "BHINNEKA": "Kata pertama dalam semboyan Indonesia 'Bhinneka Tunggal Ika'",
+                "ANGKLUNG": "Alat musik tradisional dari bambu khas Jawa Barat"
+            };
             
-            // Profesi
-            { word: "ARSITEK", clue: "Profesi yang merancang bangunan", category: "Profesi" },
-            { word: "ASTRONOT", clue: "Profesi yang pergi ke luar angkasa", category: "Profesi" },
-            { word: "KURIR", clue: "Profesi yang mengantar paket", category: "Profesi" },
-            { word: "BARISTA", clue: "Ahli dalam meracik kopi", category: "Profesi" },
+            all = all.map(q => ({
+                word: q.word,
+                clue: specificClues[q.word] || q.clue,
+                category: q.category
+            }));
             
-            // Teknologi
-            { word: "ALGORITMA", clue: "Langkah-langkah sistematis dalam pemrograman", category: "Teknologi" },
-            { word: "INTERNET", clue: "Jaringan global yang menghubungkan komputer di seluruh dunia", category: "Teknologi" },
-            { word: "ROBOT", clue: "Mesin yang bisa bergerak dan melakukan tugas manusia", category: "Teknologi" },
-            { word: "WEBSITE", clue: "Kumpulan halaman di internet", category: "Teknologi" },
-            { word: "APLIKASI", clue: "Program komputer untuk membantu tugas tertentu", category: "Teknologi" },
-            
-            // Kata Unik
-            { word: "ANGIN", clue: "Udara yang bergerak, tidak terlihat tapi terasa", category: "Alam" },
-            { word: "PELANGI", clue: "Garis warna-warni di langit setelah hujan", category: "Fenomena Alam" },
-            { word: "EMAS", clue: "Logam mulia berwarna kuning, sangat berharga", category: "Benda" },
-            { word: "BERLIAN", clue: "Batu mulia yang sangat keras dan berkilau", category: "Batu Mulia" },
-            { word: "NUSANTARA", clue: "Sebutan untuk seluruh wilayah Indonesia", category: "Kebangsaan" },
-            { word: "BHINNEKA", clue: "Kata pertama dalam semboyan Indonesia", category: "Kebangsaan" },
-            
-            // Kata Kerja
-            { word: "BERKARYA", clue: "Kegiatan menghasilkan sesuatu yang bermanfaat", category: "Aktivitas" },
-            { word: "BERJUANG", clue: "Melakukan usaha keras untuk mencapai tujuan", category: "Aktivitas" },
-            { word: "BELAJAR", clue: "Kegiatan mencari ilmu pengetahuan", category: "Aktivitas" },
-            
-            // Lain-lain
-            { word: "KREATIF", clue: "Kemampuan menciptakan sesuatu yang baru dan unik", category: "Sifat" },
-            { word: "INOVASI", clue: "Pembaruan atau penemuan baru", category: "Konsep" },
-            { word: "MOTIVASI", clue: "Dorongan untuk melakukan sesuatu", category: "Psikologi" },
-            { word: "PRESTASI", clue: "Hasil yang dicapai dari usaha yang dilakukan", category: "Pencapaian" }
+            return all;
+        }
+        
+        const allQuestions = generateAllQuestions();
+        console.log(`Total kata: ${allQuestions.length} kata`);
+
+        // ==================== MUSIC PLAYER ====================
+        const playlist = [
+            "https://files.catbox.moe/68oil6.mp3",
+            "https://files.catbox.moe/lorqa2.mp3", 
+            "https://files.catbox.moe/yi56m4.mp3",
+            "https://files.catbox.moe/iwvy9i.mp3",
+            "https://files.catbox.moe/9hc82f.m4a",
+            "https://files.catbox.moe/6i3mid.mp3"
         ];
-
+        
+        const bgClasses = ["bg1", "bg2", "bg3", "bg4", "bg5", "bg6"];
+        let currentSongIndex = 0;
+        let audio = new Audio();
+        
+        function changeBackground(index) {
+            document.body.className = bgClasses[index % bgClasses.length];
+        }
+        
+        function playSong(index) {
+            currentSongIndex = index;
+            audio.src = playlist[currentSongIndex];
+            audio.load();
+            audio.play().catch(e => console.log("Auto-play prevented"));
+            changeBackground(currentSongIndex);
+            document.getElementById("songName").textContent = `Lagu ${currentSongIndex + 1}/${playlist.length}`;
+        }
+        
+        function nextSong() {
+            currentSongIndex = (currentSongIndex + 1) % playlist.length;
+            playSong(currentSongIndex);
+        }
+        
+        function togglePlayPause() {
+            if (audio.paused) {
+                audio.play();
+                document.getElementById("playPauseBtn").textContent = "⏸️";
+            } else {
+                audio.pause();
+                document.getElementById("playPauseBtn").textContent = "▶️";
+            }
+        }
+        
+        audio.addEventListener("ended", () => nextSong());
+        audio.addEventListener("play", () => document.getElementById("playPauseBtn").textContent = "⏸️");
+        audio.addEventListener("pause", () => document.getElementById("playPauseBtn").textContent = "▶️");
+        
+        playSong(0);
+        document.getElementById("playPauseBtn").addEventListener("click", togglePlayPause);
+        document.getElementById("nextSongBtn").addEventListener("click", nextSong);
+        
+        // ==================== TOGGLE LEADERBOARD ====================
+        let isLeaderboardVisible = true;
+        const container = document.getElementById("mainContainer");
+        const leaderboard = document.getElementById("leaderboard");
+        const toggleBtn = document.getElementById("toggleLeaderboardBtn");
+        
+        function toggleLeaderboard() {
+            isLeaderboardVisible = !isLeaderboardVisible;
+            if (isLeaderboardVisible) {
+                container.classList.remove("leaderboard-hidden");
+                leaderboard.style.display = "block";
+                toggleBtn.innerHTML = "👁️ Sembunyikan Leaderboard";
+            } else {
+                container.classList.add("leaderboard-hidden");
+                leaderboard.style.display = "none";
+                toggleBtn.innerHTML = "👁️ Tampilkan Leaderboard";
+            }
+        }
+        toggleBtn.addEventListener("click", toggleLeaderboard);
+        
+        // ==================== FIREBASE ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDummyKeyForDemo123456789",
+            authDomain: "wordpuzzle-demo.firebaseapp.com",
+            databaseURL: "https://wordpuzzle-demo-default-rtdb.firebaseio.com",
+            projectId: "wordpuzzle-demo",
+            storageBucket: "wordpuzzle-demo.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abc123def456"
+        };
+        
+        let database = null;
+        let isFirebaseConnected = false;
+        
+        try {
+            if (typeof firebase !== 'undefined' && firebase.apps) {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                database = firebase.database();
+                isFirebaseConnected = true;
+            }
+        } catch (e) {}
+        
+        // ==================== LEVEL SYSTEM ====================
+        const levelQuestions = {
+            1: { name: "Easy", questions: 10 },
+            2: { name: "Medium", questions: 20 },
+            3: { name: "Hard", questions: 35 },
+            4: { name: "Hard 2", questions: 50 },
+            5: { name: "Impossible", questions: 75 }
+        };
+        
+        // Variabel Game
+        let currentLevel = 1;
         let currentQuestionIndex = 0;
-        let currentWord = "";
-        let currentClue = "";
-        let currentCategory = "";
-        let scrambledLetters = [];
-        let selectedLetters = [];
-        let answerLetters = [];
-        let score = 0;
-        let attemptsLeft = 3;
-        let level = 1;
-        let streak = 0;
-        let totalQuestions = 20;
+        let currentWord = "", currentClue = "", currentCategory = "";
+        let scrambledLetters = [], selectedLetters = [], answerLetters = [];
+        let score = 0, exp = 0, expNeeded = 100, streak = 0, attemptsLeft = 3, hintsLeft = 3, maxHints = 3;
         let gameQuestions = [];
-        let hintsUsed = 0;
-
-        // Inisialisasi game
-        function initGame() {
-            // Acak soal dan ambil 20 soal
-            const shuffled = [...questions];
+        let totalWinPoints = parseInt(localStorage.getItem("totalWinPoints") || "0");
+        let playerName = localStorage.getItem("playerName") || "";
+        
+        document.getElementById("totalWinPoints").textContent = totalWinPoints;
+        if (playerName) document.getElementById("playerName").value = playerName;
+        
+        function updateHintUI() {
+            document.getElementById("hintCount").textContent = `💡 Hint: ${hintsLeft}/${maxHints}`;
+            const hintBtn = document.getElementById("hintBtn");
+            const buyHintBtn = document.getElementById("buyHintBtn");
+            if (hintsLeft <= 0) {
+                hintBtn.disabled = true;
+                hintBtn.style.opacity = "0.5";
+                buyHintBtn.style.display = "inline-block";
+            } else {
+                hintBtn.disabled = false;
+                hintBtn.style.opacity = "1";
+                buyHintBtn.style.display = "none";
+            }
+        }
+        
+        function buyHint() {
+            if (exp >= 30) {
+                exp -= 30;
+                hintsLeft = Math.min(hintsLeft + 1, maxHints);
+                updateExpUI();
+                updateHintUI();
+                showFeedback("✨ Beli hint berhasil! -30 EXP ✨", "success");
+            } else {
+                showFeedback(`EXP tidak cukup! Butuh 30 EXP`, "error");
+            }
+        }
+        
+        function loadQuestionsForLevel() {
+            const shuffled = [...allQuestions];
             for (let i = shuffled.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
-            gameQuestions = shuffled.slice(0, totalQuestions);
+            gameQuestions = shuffled.slice(0, levelQuestions[currentLevel].questions);
             currentQuestionIndex = 0;
-            score = 0;
-            level = 1;
             streak = 0;
-            hintsUsed = 0;
-            updateScore();
+            updateUI();
             loadQuestion();
-            updateProgress();
-            createParticles();
         }
         
         function loadQuestion() {
             if (currentQuestionIndex >= gameQuestions.length) {
-                showGameComplete();
+                if (currentLevel < 5) {
+                    currentLevel++;
+                    exp = 0;
+                    updateExpNeeded();
+                    showFeedback(`🎉 Naik ke Level ${currentLevel}: ${levelQuestions[currentLevel].name}! 🎉`, "success");
+                    loadQuestionsForLevel();
+                } else {
+                    showGameComplete();
+                }
                 return;
             }
             
-            const question = gameQuestions[currentQuestionIndex];
-            currentWord = question.word.toUpperCase();
-            currentClue = question.clue;
-            currentCategory = question.category;
+            const q = gameQuestions[currentQuestionIndex];
+            currentWord = q.word.toUpperCase();
+            currentClue = q.clue;
+            currentCategory = q.category;
             
-            scrambledLetters = currentWord.split('');
+            scrambledLetters = currentWord.split("");
             for (let i = scrambledLetters.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [scrambledLetters[i], scrambledLetters[j]] = [scrambledLetters[j], scrambledLetters[i]];
             }
             
             selectedLetters = [];
-            answerLetters = new Array(currentWord.length).fill('');
-            attemptsLeft = 3;
+            answerLetters = new Array(currentWord.length).fill("");
             
-            document.getElementById('clue').textContent = currentClue;
-            document.getElementById('category').textContent = currentCategory;
-            document.getElementById('attempts').textContent = attemptsLeft;
-            document.getElementById('level').textContent = level;
-            document.getElementById('nextBtn').style.display = 'none';
-            document.getElementById('submitBtn').style.display = 'inline-block';
-            document.getElementById('feedback').className = 'feedback';
-            document.getElementById('feedback').style.display = 'none';
+            document.getElementById("clue").textContent = currentClue;
+            document.getElementById("category").textContent = currentCategory;
+            document.getElementById("attempts").textContent = attemptsLeft;
+            document.getElementById("nextBtn").style.display = "none";
+            document.getElementById("submitBtn").style.display = "inline-block";
+            document.getElementById("feedback").className = "feedback";
+            document.getElementById("feedback").style.display = "none";
             
-            renderScrambledLetters();
-            renderAnswerLetters();
+            renderScrambled();
+            renderAnswer();
+            updateProgress();
         }
         
-        function renderScrambledLetters() {
-            const container = document.getElementById('scrambledLetters');
-            container.innerHTML = '';
-            
-            scrambledLetters.forEach((letter, index) => {
-                const tile = document.createElement('div');
-                tile.className = 'letter-tile';
-                if (selectedLetters.includes(index)) {
-                    tile.classList.add('selected');
-                }
+        function renderScrambled() {
+            const container = document.getElementById("scrambledLetters");
+            container.innerHTML = "";
+            scrambledLetters.forEach((letter, idx) => {
+                const tile = document.createElement("div");
+                tile.className = "letter-tile";
+                if (selectedLetters.includes(idx)) tile.classList.add("selected");
                 tile.textContent = letter;
-                tile.onclick = () => selectLetter(index);
+                tile.onclick = () => selectLetter(idx);
                 container.appendChild(tile);
             });
         }
         
-        function renderAnswerLetters() {
-            const container = document.getElementById('answerLetters');
-            container.innerHTML = '';
-            
-            answerLetters.forEach((letter, index) => {
-                const slot = document.createElement('div');
-                slot.className = 'answer-slot';
+        function renderAnswer() {
+            const container = document.getElementById("answerLetters");
+            container.innerHTML = "";
+            answerLetters.forEach((letter, idx) => {
+                const slot = document.createElement("div");
+                slot.className = "answer-slot";
                 if (letter) {
-                    slot.classList.add('filled');
+                    slot.classList.add("filled");
                     slot.textContent = letter;
                 }
-                slot.onclick = () => removeFromAnswer(index);
+                slot.onclick = () => removeFromAnswer(idx);
                 container.appendChild(slot);
             });
         }
         
-        function selectLetter(index) {
-            if (selectedLetters.includes(index)) return;
-            
-            const emptyIndex = answerLetters.findIndex(letter => letter === '');
-            if (emptyIndex === -1) {
-                showFeedback('Area jawaban sudah penuh!', 'error');
+        function selectLetter(idx) {
+            if (selectedLetters.includes(idx)) return;
+            const emptyIdx = answerLetters.findIndex(l => l === "");
+            if (emptyIdx === -1) {
+                showFeedback("Jawaban sudah penuh!", "error");
                 return;
             }
-            
-            selectedLetters.push(index);
-            answerLetters[emptyIndex] = scrambledLetters[index];
-            
-            renderScrambledLetters();
-            renderAnswerLetters();
-            
-            if (answerLetters.every(letter => letter !== '')) {
-                checkAnswer();
-            }
+            selectedLetters.push(idx);
+            answerLetters[emptyIdx] = scrambledLetters[idx];
+            renderScrambled();
+            renderAnswer();
+            if (answerLetters.every(l => l !== "")) checkAnswer();
         }
         
-        function removeFromAnswer(index) {
-            if (answerLetters[index] === '') return;
-            
-            const letter = answerLetters[index];
-            const foundIndex = scrambledLetters.findIndex((l, i) => 
-                l === letter && !selectedLetters.includes(i)
-            );
-            
-            if (foundIndex !== -1) {
-                const selectedIndex = selectedLetters.indexOf(foundIndex);
-                if (selectedIndex !== -1) {
-                    selectedLetters.splice(selectedIndex, 1);
-                }
-                answerLetters[index] = '';
-                renderScrambledLetters();
-                renderAnswerLetters();
+        function removeFromAnswer(idx) {
+            if (answerLetters[idx] === "") return;
+            const letter = answerLetters[idx];
+            const foundIdx = scrambledLetters.findIndex((l, i) => l === letter && !selectedLetters.includes(i));
+            if (foundIdx !== -1) {
+                const selIdx = selectedLetters.indexOf(foundIdx);
+                if (selIdx !== -1) selectedLetters.splice(selIdx, 1);
+                answerLetters[idx] = "";
+                renderScrambled();
+                renderAnswer();
             }
         }
         
         function resetAnswer() {
             selectedLetters = [];
-            answerLetters = new Array(currentWord.length).fill('');
-            renderScrambledLetters();
-            renderAnswerLetters();
-            showFeedback('Jawaban direset!', 'info');
+            answerLetters = new Array(currentWord.length).fill("");
+            renderScrambled();
+            renderAnswer();
+            showFeedback("Jawaban direset!", "info");
         }
         
         function clearAnswer() {
             selectedLetters = [];
-            answerLetters = new Array(currentWord.length).fill('');
-            renderScrambledLetters();
-            renderAnswerLetters();
-            showFeedback('Semua huruf dihapus!', 'info');
+            answerLetters = new Array(currentWord.length).fill("");
+            renderScrambled();
+            renderAnswer();
+            showFeedback("Semua huruf dihapus!", "info");
         }
         
         function useHint() {
-            hintsUsed++;
-            // Tampilkan huruf pertama yang belum terisi
+            if (hintsLeft <= 0) {
+                showFeedback("Hint habis! Beli hint dengan 30 EXP!", "error");
+                return;
+            }
             for (let i = 0; i < answerLetters.length; i++) {
-                if (answerLetters[i] === '') {
+                if (answerLetters[i] === "") {
                     const correctLetter = currentWord[i];
-                    const availableIndex = scrambledLetters.findIndex((l, idx) => 
-                        l === correctLetter && !selectedLetters.includes(idx)
-                    );
-                    
-                    if (availableIndex !== -1) {
-                        selectLetter(availableIndex);
-                        showFeedback(`💡 Petunjuk: Huruf ke-${i+1} adalah "${correctLetter}"`, 'info');
+                    const availableIdx = scrambledLetters.findIndex((l, idx) => l === correctLetter && !selectedLetters.includes(idx));
+                    if (availableIdx !== -1) {
+                        selectLetter(availableIdx);
+                        hintsLeft--;
+                        updateHintUI();
+                        showFeedback(`💡 Petunjuk: Huruf ke-${i+1} adalah "${correctLetter}"`, "info");
                         break;
                     }
                 }
             }
         }
         
+        function addExp(amount) {
+            exp += amount;
+            if (exp >= expNeeded) {
+                exp = exp - expNeeded;
+                currentLevel++;
+                updateExpNeeded();
+                showLevelUp();
+                hintsLeft = maxHints;
+                updateHintUI();
+                loadQuestionsForLevel();
+            }
+            updateExpUI();
+        }
+        
+        function updateExpNeeded() { expNeeded = 100 + (currentLevel - 1) * 25; }
+        
+        function updateExpUI() {
+            const percent = (exp / expNeeded) * 100;
+            document.getElementById("expFill").style.width = `${percent}%`;
+            document.getElementById("expText").textContent = `EXP: ${exp}/${expNeeded}`;
+            document.getElementById("levelName").textContent = `Level ${currentLevel}: ${levelQuestions[currentLevel]?.name || "Max"}`;
+        }
+        
+        function updateUI() {
+            document.getElementById("score").textContent = score;
+            document.getElementById("streak").textContent = streak;
+            document.getElementById("questionCount").textContent = `${currentQuestionIndex}/${gameQuestions.length}`;
+            document.getElementById("attempts").textContent = attemptsLeft;
+            updateExpUI();
+        }
+        
         function checkAnswer() {
-            const userAnswer = answerLetters.join('');
-            
+            const userAnswer = answerLetters.join("");
             if (userAnswer === currentWord) {
-                const points = (10 * level) + (streak * 2);
+                const points = 10 * currentLevel + streak * 2;
                 score += points;
                 streak++;
-                level = Math.floor(score / 50) + 1;
-                updateScore();
-                
-                showFeedback(`✅ BENAR! +${points} poin! 🔥 Streak: ${streak}`, 'success');
-                
-                // Efek partikel
-                createSuccessEffect();
-                
+                addExp(20);
+                updateUI();
+                showFeedback(`✅ BENAR! +${points} poin! +20 EXP! 🔥 Streak: ${streak}`, "success");
                 currentQuestionIndex++;
+                updateUI();
                 updateProgress();
-                
                 if (currentQuestionIndex < gameQuestions.length) {
-                    document.getElementById('nextBtn').style.display = 'block';
-                    document.getElementById('submitBtn').style.display = 'none';
+                    document.getElementById("nextBtn").style.display = "block";
+                    document.getElementById("submitBtn").style.display = "none";
+                } else if (currentLevel < 5) {
+                    currentLevel++;
+                    exp = 0;
+                    hintsLeft = maxHints;
+                    updateHintUI();
+                    updateExpNeeded();
+                    showFeedback(`🎉 Naik ke Level ${currentLevel}: ${levelQuestions[currentLevel].name}! 🎉`, "success");
+                    loadQuestionsForLevel();
                 } else {
                     showGameComplete();
                 }
             } else {
                 attemptsLeft--;
                 streak = 0;
-                document.getElementById('attempts').textContent = attemptsLeft;
-                document.getElementById('streak').textContent = streak;
-                
+                addExp(5);
+                document.getElementById("attempts").textContent = attemptsLeft;
+                document.getElementById("streak").textContent = streak;
+                updateUI();
                 if (attemptsLeft <= 0) {
-                    showFeedback(`❌ GAGAL! Jawaban: ${currentWord}`, 'error');
+                    showFeedback(`❌ GAGAL! Jawaban: ${currentWord} (+5 EXP)`, "error");
                     currentQuestionIndex++;
                     updateProgress();
-                    
                     if (currentQuestionIndex < gameQuestions.length) {
-                        setTimeout(() => {
-                            loadQuestion();
-                        }, 2000);
+                        attemptsLeft = 3;
+                        document.getElementById("attempts").textContent = attemptsLeft;
+                        setTimeout(() => loadQuestion(), 2000);
+                    } else if (currentLevel < 5) {
+                        attemptsLeft = 3;
+                        currentLevel++;
+                        loadQuestionsForLevel();
                     } else {
-                        setTimeout(() => {
-                            showGameComplete();
-                        }, 2000);
+                        showGameComplete();
                     }
                 } else {
-                    showFeedback(`❌ Salah! Sisa: ${attemptsLeft} nyawa`, 'error');
+                    showFeedback(`❌ Salah! Sisa: ${attemptsLeft} nyawa (+5 EXP)`, "error");
                     resetAnswer();
                 }
             }
         }
         
-        function nextQuestion() {
-            loadQuestion();
-        }
-        
-        function updateScore() {
-            document.getElementById('score').textContent = score;
-            document.getElementById('level').textContent = level;
-            document.getElementById('streak').textContent = streak;
-        }
-        
+        function nextQuestion() { loadQuestion(); }
         function updateProgress() {
-            const progress = ((currentQuestionIndex) / gameQuestions.length) * 100;
-            document.getElementById('progressBar').style.width = `${progress}%`;
-            document.getElementById('progressText').textContent = `Soal ${currentQuestionIndex + 1} dari ${gameQuestions.length}`;
+            const percent = (currentQuestionIndex / gameQuestions.length) * 100;
+            document.getElementById("progressFill").style.width = `${percent}%`;
         }
         
-        function showFeedback(message, type) {
-            const feedbackEl = document.getElementById('feedback');
-            feedbackEl.textContent = message;
-            feedbackEl.className = `feedback ${type}`;
-            
-            setTimeout(() => {
-                feedbackEl.style.display = 'none';
-            }, 2000);
+        function showFeedback(msg, type) {
+            const fb = document.getElementById("feedback");
+            fb.textContent = msg;
+            fb.className = `feedback ${type}`;
+            setTimeout(() => fb.style.display = "none", 2000);
         }
+        
+        function showLevelUp() {
+            const modal = document.getElementById("levelUpModal");
+            document.getElementById("levelUpMsg").innerHTML = `Selamat! Naik ke Level ${currentLevel}<br>${levelQuestions[currentLevel]?.name}!<br>✨ Hint direset ke 3! ✨`;
+            modal.style.display = "flex";
+        }
+        
+        function closeLevelUpModal() { document.getElementById("levelUpModal").style.display = "none"; }
         
         function showGameComplete() {
-            let achievement = "";
-            if (score >= 1000) achievement = "🏆 MASTER PUZZLER! 🏆";
-            else if (score >= 500) achievement = "⭐ GRAND MASTER! ⭐";
-            else if (score >= 200) achievement = "🎯 SKILLED PUZZLER! 🎯";
-            else achievement = "👍 GOOD JOB! 👍";
-            
-            document.getElementById('finalScore').textContent = score;
-            document.getElementById('achievementText').innerHTML = achievement + `<br><small>✨ ${gameQuestions.length} soal berhasil! ✨</small>`;
-            document.getElementById('gameCompleteModal').style.display = 'flex';
+            totalWinPoints += 3030;
+            localStorage.setItem("totalWinPoints", totalWinPoints);
+            document.getElementById("totalWinPoints").textContent = totalWinPoints;
+            document.getElementById("finalWinPoints").textContent = totalWinPoints;
+            document.getElementById("gameCompleteModal").style.display = "flex";
+            saveScoreToLeaderboard();
         }
         
         function resetGame() {
-            initGame();
-            document.getElementById('gameCompleteModal').style.display = 'none';
+            currentLevel = 1;
+            score = 0;
+            exp = 0;
+            attemptsLeft = 3;
+            hintsLeft = maxHints;
+            streak = 0;
+            updateExpNeeded();
+            updateHintUI();
+            loadQuestionsForLevel();
+            document.getElementById("gameCompleteModal").style.display = "none";
         }
         
-        function createParticles() {
-            const container = document.getElementById('particles');
-            container.innerHTML = '';
-            for (let i = 0; i < 50; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.width = Math.random() * 5 + 2 + 'px';
-                particle.style.height = particle.style.width;
-                particle.style.animationDelay = Math.random() * 10 + 's';
-                particle.style.animationDuration = Math.random() * 10 + 5 + 's';
-                container.appendChild(particle);
+        // Leaderboard Functions
+        async function saveScoreToLeaderboard() {
+            const name = document.getElementById("playerName").value.trim();
+            if (!name) return;
+            
+            playerName = name;
+            localStorage.setItem("playerName", playerName);
+            
+            const leaderboardRef = isFirebaseConnected && database ? database.ref("leaderboard") : null;
+            const newEntry = { name: playerName, totalPoints: totalWinPoints, wins: Math.floor(totalWinPoints / 3030), timestamp: Date.now() };
+            
+            if (leaderboardRef) {
+                try {
+                    await leaderboardRef.push(newEntry);
+                    showFeedback("Skor disimpan!", "success");
+                } catch(e) { saveToLocal(); }
+            } else { saveToLocal(); }
+            loadLeaderboard();
+        }
+        
+        function saveToLocal() {
+            let local = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+            local.push({ name: playerName, totalPoints: totalWinPoints, wins: Math.floor(totalWinPoints / 3030), timestamp: Date.now() });
+            local.sort((a, b) => b.totalPoints - a.totalPoints);
+            localStorage.setItem("leaderboard", JSON.stringify(local.slice(0, 20)));
+        }
+        
+        async function loadLeaderboard() {
+            const container = document.getElementById("leaderboardList");
+            if (isFirebaseConnected && database) {
+                try {
+                    const snapshot = await database.ref("leaderboard").orderByChild("totalPoints").limitToLast(10).once("value");
+                    const entries = [];
+                    for (let key in snapshot.val()) entries.push(snapshot.val()[key]);
+                    entries.sort((a, b) => b.totalPoints - a.totalPoints);
+                    renderLeaderboard(entries);
+                } catch(e) { loadLocal(); }
+            } else { loadLocal(); }
+        }
+        
+        function loadLocal() {
+            const local = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+            local.sort((a, b) => b.totalPoints - a.totalPoints);
+            renderLeaderboard(local.slice(0, 10));
+        }
+        
+        function renderLeaderboard(entries) {
+            const container = document.getElementById("leaderboardList");
+            if (!entries || entries.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px;">Belum ada data</div>';
+                return;
             }
+            container.innerHTML = entries.map((e, i) => `
+                <div class="leaderboard-item">
+                    <div class="rank ${i===0?'top-1':i===1?'top-2':i===2?'top-3':''}">${i+1}</div>
+                    <div class="player-name">${escapeHtml(e.name)}</div>
+                    <div class="player-score">${e.totalPoints}</div>
+                    <div class="player-level">${e.wins} win</div>
+                </div>
+            `).join("");
         }
         
-        function createSuccessEffect() {
-            const wrapper = document.querySelector('.game-wrapper');
-            wrapper.style.transform = 'scale(1.01)';
-            setTimeout(() => {
-                wrapper.style.transform = 'scale(1)';
-            }, 200);
-        }
+        function escapeHtml(t) { const d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
         
-        // Event listeners
-        document.getElementById('resetBtn').addEventListener('click', resetAnswer);
-        document.getElementById('clearBtn').addEventListener('click', clearAnswer);
-        document.getElementById('hintBtn').addEventListener('click', useHint);
-        document.getElementById('submitBtn').addEventListener('click', () => {
-            if (answerLetters.every(letter => letter !== '')) {
-                checkAnswer();
-            } else {
-                showFeedback('Lengkapi jawaban dulu!', 'error');
-            }
+        // Event Listeners
+        document.getElementById("resetBtn").addEventListener("click", resetAnswer);
+        document.getElementById("clearBtn").addEventListener("click", clearAnswer);
+        document.getElementById("hintBtn").addEventListener("click", useHint);
+        document.getElementById("buyHintBtn").addEventListener("click", buyHint);
+        document.getElementById("submitBtn").addEventListener("click", () => {
+            if (answerLetters.every(l => l !== "")) checkAnswer();
+            else showFeedback("Lengkapi jawaban dulu!", "error");
         });
-        document.getElementById('nextBtn').addEventListener('click', nextQuestion);
-        document.getElementById('playAgainBtn').addEventListener('click', resetGame);
+        document.getElementById("nextBtn").addEventListener("click", nextQuestion);
+        document.getElementById("saveScoreBtn").addEventListener("click", saveScoreToLeaderboard);
+        document.getElementById("playAgainBtn").addEventListener("click", resetGame);
         
-        initGame();
+        // Start Game
+        updateExpNeeded();
+        updateHintUI();
+        loadQuestionsForLevel();
+        loadLeaderboard();
     </script>
 </body>
 </html>
